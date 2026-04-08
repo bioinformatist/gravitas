@@ -18,3 +18,7 @@ serde_json = { workspace = true }
 toml = "0.8"
 dirs = "6"
 chrono = { workspace = true }
+
+[features]
+default = []
+futu = ["gravitas-fetch/futu"]

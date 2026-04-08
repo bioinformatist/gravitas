@@ -14,5 +14,10 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 chrono = { workspace = true }
 
+# Futu OpenD protocol (optional)
+prost = { version = "0.13", optional = true }
+sha1 = { version = "0.10", features = ["std"], optional = true }
+
 [features]
 default = []
+futu = ["dep:prost", "dep:sha1"]

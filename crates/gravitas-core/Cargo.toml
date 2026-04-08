@@ -8,3 +8,4 @@ chrono = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 regit-blackscholes = { workspace = true }
+ordered-float = "5"

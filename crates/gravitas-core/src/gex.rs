@@ -1,4 +1,5 @@
 use crate::types::{GexResult, OptionContract, StrikeGex};
+use ordered_float::OrderedFloat;
 use regit_blackscholes::greeks::compute_greeks;
 use regit_blackscholes::types::{OptionParams, OptionType as BsOptionType};
 
@@ -13,7 +14,7 @@ pub fn compute_gex(
     let today = now.date_naive();
 
     // Aggregate GEX per strike: (call_gex, put_gex, vanna)
-    let mut strike_map: std::collections::BTreeMap<i64, (f64, f64, f64, f64)> =
+    let mut strike_map: std::collections::BTreeMap<OrderedFloat<f64>, (f64, f64, f64)> =
         std::collections::BTreeMap::new();
 
     for contract in contracts {
@@ -47,26 +48,25 @@ pub fn compute_gex(
         let gex = greeks.gamma * oi * 100.0 * spot_price * spot_price;
         let vanna_exp = greeks.vanna * oi * 100.0;
 
-        // Use strike in centavos as integer key (avoids float key issues)
-        let key = (contract.strike * 100.0) as i64;
-        let entry = strike_map.entry(key).or_insert((contract.strike, 0.0, 0.0, 0.0));
+        let key = OrderedFloat(contract.strike);
+        let entry = strike_map.entry(key).or_insert((0.0, 0.0, 0.0));
 
         match contract.option_type {
             crate::types::OptionType::Call => {
-                entry.1 += gex;
-                entry.3 += vanna_exp;
+                entry.0 += gex;
+                entry.2 += vanna_exp;
             }
             crate::types::OptionType::Put => {
-                entry.2 += gex;
-                entry.3 -= vanna_exp;
+                entry.1 += gex;
+                entry.2 -= vanna_exp;
             }
         }
     }
 
     let mut strikes: Vec<StrikeGex> = strike_map
-        .into_values()
-        .map(|(strike, call_gex, put_gex, vanna)| StrikeGex {
-            strike,
+        .into_iter()
+        .map(|(k, (call_gex, put_gex, vanna))| StrikeGex {
+            strike: k.into_inner(),
             call_gex,
             put_gex,
             net_gex: call_gex - put_gex,

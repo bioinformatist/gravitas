@@ -50,11 +50,20 @@ async fn main() {
 
     let source: Box<dyn DataSource> =
         match resolve_source(cli.source.as_deref(), &config) {
+            #[cfg(feature = "futu")]
+            Ok(ResolvedSource::Futu { host, port }) => {
+                Box::new(gravitas_fetch::futu::FutuSource::new(host, port))
+            }
+            #[cfg(not(feature = "futu"))]
+            Ok(ResolvedSource::Futu { .. }) => {
+                eprintln!("Futu source detected but binary was compiled without --features futu");
+                eprintln!("Using mock data.");
+                Box::new(MockSource::new())
+            }
             Ok(ResolvedSource::Direct { tradier_token }) => {
                 Box::new(TradierSource::new(tradier_token, false))
             }
             Ok(ResolvedSource::Api { api_key: _, api_base: _ }) => {
-                // TODO: implement API client source
                 eprintln!("API mode not yet implemented, falling back to mock data");
                 Box::new(MockSource::new())
             }
@@ -104,7 +113,10 @@ async fn main() {
             "json" => {
                 println!("{}", serde_json::to_string_pretty(&result).unwrap());
             }
-            "ascii" | _ => {
+            "table" => {
+                output::table::render_table(&result);
+            }
+            _ => {
                 output::ascii::render_ascii(&result);
                 if cli.vanna {
                     println!("\nVanna Exposure by Strike:");
