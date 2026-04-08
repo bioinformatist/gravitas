@@ -1,0 +1,19 @@
+[package]
+name = "gravitas-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gravitas-core = { path = "../gravitas-core" }
+gravitas-fetch = { path = "../gravitas-fetch" }
+axum = { version = "0.8", features = ["ws"] }
+shuttle-axum = "0.57"
+shuttle-runtime = "0.57"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+dashmap = "6"
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = "0.3"
